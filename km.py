@@ -4,7 +4,7 @@ from datetime import datetime, date, time, timedelta
 import math
 import decimal
 import numpy
-import matplotlib.pyplot as plot
+# import matplotlib.pyplot as plot
 from matplotlib.dates import strpdate2num
 from collections import OrderedDict
 
@@ -40,7 +40,7 @@ def condense_blocks(X):
     block = OrderedDict( )
 
     blockHasAttack = False
-    expectedPeriod = numpy.datetime64( 6, 'm' )
+    expectedPeriod = numpy.timedelta64( 6, 'm' )
 
     for idx, ( key, value ) in enumerate( X.iteritems() ):
         foundGap = False
@@ -162,13 +162,13 @@ def KM(X, k, store=False):
 
             print( "[ TOTAL ] Points: {}  -  Attacks: {}  -  Ratio: {}".format( len( X ), count, ( ( count / float( len( X ) ) ) * 100 ) ) )
 
-            if store:
-                plot.plot( runs, SSEs, 'c--', label="SSE", linewidth=2 )
-                plot.xlabel( "Iterations" )
-                plot.ylabel( "SSE" )
-                plot.grid( linestyle='-', linewidth=0.25 )
-
-                plot.show()
+            # if store:
+            #     plot.plot( runs, SSEs, 'c--', label="SSE", linewidth=2 )
+            #     plot.xlabel( "Iterations" )
+            #     plot.ylabel( "SSE" )
+            #     plot.grid( linestyle='-', linewidth=0.25 )
+            #
+            #     plot.show()
 
             return cSSE
 
