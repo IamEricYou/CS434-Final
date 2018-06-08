@@ -7,6 +7,7 @@ import numpy
 # import matplotlib.pyplot as plot
 from matplotlib.dates import strpdate2num
 from collections import OrderedDict
+from sklearn.ensemble import RandomForestClassifier
 
 
 def parse_args():
@@ -30,8 +31,8 @@ def init_matrices(filename):
 
 
 ####################################################################
- # Function: get_chunk
- # Description: Initialize the matricies
+ # Function: condense_blocks
+ # Description: Condenses the data into the means
 ####################################################################
 
 def condense_blocks(X):
@@ -89,7 +90,11 @@ def euclidian_classification(x, Y):
     # For each point in the training data compute the distance for the provided point
     for idx in range( 0, len( Y ) ):
         # Compute and append the current distance
-        d.append( numpy.sqrt( numpy.sum( numpy.square( x[ : -1 ] - Y[idx, : -1] ) ) ) )
+        if len( x ) < len(  Y[idx, : ] ):
+            d.append( numpy.sqrt( numpy.sum( numpy.square( x - Y[idx, : -1] ) ) ) )
+        else:
+            d.append( numpy.sqrt( numpy.sum( numpy.square( x[ : -1 ] - Y[idx, : -1] ) ) ) )
+
     return d.index( min( d ) )
 
 
@@ -162,15 +167,12 @@ def KM(X, k, store=False):
 
             print( "[ TOTAL ] Points: {}  -  Attacks: {}  -  Ratio: {}".format( len( X ), count, ( ( count / float( len( X ) ) ) * 100 ) ) )
 
-            # if store:
-            #     plot.plot( runs, SSEs, 'c--', label="SSE", linewidth=2 )
-            #     plot.xlabel( "Iterations" )
-            #     plot.ylabel( "SSE" )
-            #     plot.grid( linestyle='-', linewidth=0.25 )
-            #
-            #     plot.show()
+            statuses = numpy.zeros( ( k, 1 ) )
+            for idx, cluster in enumerate( U ):
+                if cluster[ len( cluster ) - 1 ] > 0:
+                    statuses[ idx ] = 1;
 
-            return cSSE
+            return ( C, U, statuses )
 
 
 ####################################################################
@@ -179,22 +181,51 @@ def KM(X, k, store=False):
 
 def main(argv):
 
-    trainingSets = { "./data/subject-1.csv", "./data/subject-2.csv", "./data/subject-3.csv", "./data/subject-4.csv" }
+    trainingSets = [ "./data/subject-1.csv",
+                     "./data/subject-2.csv",
+                     "./data/subject-3.csv",
+                     "./data/subject-4.csv" ]
+
+    testingSets = [ "./sampleinstances/sampleinstance_1.csv",
+                    "./sampleinstances/sampleinstance_2.csv",
+                    "./sampleinstances/sampleinstance_3.csv",
+                    "./sampleinstances/sampleinstance_4.csv",
+                    "./sampleinstances/sampleinstance_5.csv" ]
 
     k = parse_args( )
     numpy.set_printoptions( suppress=True )
 
     train = numpy.empty( ( 0, 9 ) )
-
     for set in trainingSets:
-        data = init_matrices( "./data/subject-1.csv" )
+        data = init_matrices( set )
         data = condense_blocks( data )
         train = numpy.vstack( ( train, data ) )
 
-    # print( data.shape )
+    clusters, clusterModel, statuses = KM( train, k, store=False )
+    # print( "\nK Means SSE: {}\n".format( sse ) )
 
-    sse = KM( train, k, store=False )
-    print( "\nK Means SSE: {}\n".format( sse ) )
+    print( " " )
+    for idx, set in enumerate( testingSets ):
+        test = numpy.loadtxt( set, float, delimiter=",", usecols=range( 1, 9 ) )
+        test = numpy.matrix( test ).mean( 0 ).A1
+
+        designation = euclidian_classification( test, clusterModel )   # Find the classification of the test point
+        print( "[ TEST {} ] Cluster Designation: {}. ".format( idx, ( designation + 1 ) ) )
+
+        T = numpy.matrix( clusters[ designation ] )
+        Y = numpy.matrix( T.T[ T.shape[1] - 1 ] ).T   # Create the Y matrix by pulling the last column from T
+        Y = numpy.ravel( Y )
+        T = numpy.delete( T, T.shape[1] - 1, 1 )    # Delete the last column in T
+        X = numpy.matrix( T, float )  # Apply the normilization to the features to get the vector for analysis
+
+        if statuses[ designation ] > 0:
+            forest = RandomForestClassifier( )
+            forest.fit( X, Y )
+            print( "[ TEST {} ] Prediction: {}.\n".format( idx, forest.predict( numpy.matrix( test ) )[ 0 ] ) )
+        else:
+            print( " " )
+
+    print( " " )
 
 if __name__ == "__main__":
     main( sys.argv )
