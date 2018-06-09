@@ -8,6 +8,7 @@ import numpy
 from matplotlib.dates import strpdate2num
 from collections import OrderedDict
 from sklearn.ensemble import RandomForestClassifier
+from sklearn import svm
 
 
 def parse_args():
@@ -176,21 +177,56 @@ def KM(X, k, store=False):
 
 
 ####################################################################
+ # Function: model_error
+ # Description: Computes the total error given a model and it's
+ # actual results
+####################################################################
+
+def model_error( M, Ye ):
+    decimal.getcontext().prec = 4   # Set the decimal precision
+    misses = 0
+    missedNonAttacks = 0
+    missedAttacks = 0
+    # Check if the predicited result meets the actual for each point
+    for idx in range( 0, M.shape[0] ):
+        if M[ idx ][ -1 ] != Ye[ idx ]:
+            if M[ idx ][ -1 ] == 0:
+                missedNonAttacks += 1
+            else:
+                missedAttacks += 1
+            misses += 1
+    print( "\nFalse Positives: {}".format( missedNonAttacks ) )
+    print( "False Negatives: {}".format( missedAttacks ) )
+    error = ( ( decimal.Decimal( M.shape[0] ) - decimal.Decimal( misses ) ) / decimal.Decimal( M.shape[0] ) ) * decimal.Decimal( 100 )
+    return( error )
+
+
+####################################################################
  # Function: main
 ####################################################################
 
 def main(argv):
 
+    # TODO: Test OneClassSVM by removing all instances of attacks then predicting whether the attack instances are outliers
+    # TODO: If OneClassSVM Adds information combine it with Random Forest to get class probabilities and class
+    # TODO: Save results in specified manner and run testing script
+
     trainingSets = [ "./data/subject-1.csv",
                      "./data/subject-2.csv",
                      "./data/subject-3.csv",
                      "./data/subject-4.csv" ]
-
+    # testingSets = [ "./data/general-instances.csv" ]
     testingSets = [ "./sampleinstances/sampleinstance_1.csv",
                     "./sampleinstances/sampleinstance_2.csv",
                     "./sampleinstances/sampleinstance_3.csv",
                     "./sampleinstances/sampleinstance_4.csv",
                     "./sampleinstances/sampleinstance_5.csv" ]
+
+    # trainingSets = [ "./data/individual-1.csv" ]
+    # testingSets = [ "./data/individual-1-instances.csv" ]
+    #
+    # trainingSets = [ "./data/individual-2.csv" ]
+    # testingSets = [ "./data/individual-2-instances.csv" ]
 
     k = parse_args( )
     numpy.set_printoptions( suppress=True )
@@ -202,28 +238,105 @@ def main(argv):
         train = numpy.vstack( ( train, data ) )
 
     clusters, clusterModel, statuses = KM( train, k, store=False )
-    # print( "\nK Means SSE: {}\n".format( sse ) )
+    forests = []
+    SVMs = []
+    for idx, cluster in enumerate( clusters ):
+        SVMs.append(
+            svm.OneClassSVM( nu=0.1, kernel="rbf", gamma=0.1 )
+        )
 
-    print( " " )
-    for idx, set in enumerate( testingSets ):
-        test = numpy.loadtxt( set, float, delimiter=",", usecols=range( 1, 9 ) )
-        test = numpy.matrix( test ).mean( 0 ).A1
+        forests.append( RandomForestClassifier(
+            bootstrap=False,
+            class_weight=None,
+            criterion='entropy',
+            max_depth=None,
+            max_features=None,
+            max_leaf_nodes=None,
+            min_impurity_decrease=0.0,
+            min_impurity_split=None,
+            min_samples_leaf=1,
+            min_samples_split=2,
+            min_weight_fraction_leaf=0.0,
+            n_estimators=20,
+            n_jobs=1,
+            oob_score=False,
+            random_state=0,
+            verbose=0,
+            warm_start=False )
+        )
 
-        designation = euclidian_classification( test, clusterModel )   # Find the classification of the test point
-        print( "[ TEST {} ] Cluster Designation: {}. ".format( idx, ( designation + 1 ) ) )
-
-        T = numpy.matrix( clusters[ designation ] )
+        T = numpy.matrix( cluster )
         Y = numpy.matrix( T.T[ T.shape[1] - 1 ] ).T   # Create the Y matrix by pulling the last column from T
         Y = numpy.ravel( Y )
         T = numpy.delete( T, T.shape[1] - 1, 1 )    # Delete the last column in T
         X = numpy.matrix( T, float )  # Apply the normilization to the features to get the vector for analysis
 
+        forests[ idx ].fit( X, Y )
+        # print( forests[ idx ].feature_importances_ )
+
+        # removed = 0
+        # svmX = numpy.copy( X )
+        # for jdx, y in enumerate( Y ):
+        #     if y == 1:
+        #         svmX = numpy.delete( svmX, ( jdx - removed ), axis=0 )
+        #         removed += 1
+        svmY = numpy.copy( Y )
+        svmY[ svmY == 1 ] = -1
+        svmY[ svmY == 0 ] = 1
+        SVMs[ idx ].fit( X, y=svmY )
+
+
+    predictions = []
+    for idx, sample in enumerate( train ):
+        designation = euclidian_classification( sample, clusterModel )   # Find the classification of the test point
         if statuses[ designation ] > 0:
-            forest = RandomForestClassifier( )
-            forest.fit( X, Y )
-            print( "[ TEST {} ] Prediction: {}.\n".format( idx, forest.predict( numpy.matrix( test ) )[ 0 ] ) )
+            prediction = forests[ designation ].predict( numpy.matrix( sample[ : -1 ] ) )[ 0 ]
+            # prediction = SVMs[ designation ].predict( numpy.matrix( sample[ : -1 ] ) )[ 0 ]
+            # if prediction == 1:
+            #     prediction = 0
+            # else:
+            #     prediction = 1
+            predictions.append( prediction )
         else:
-            print( " " )
+            predictions.append( 0.0 )
+
+    print( "Training Model Accuracy: {}%".format( model_error( train, predictions ) ) )
+
+    print( " " )
+
+    for idx, set in enumerate( testingSets ):
+        hits = 0
+        predictions = []
+        test = numpy.loadtxt( set, float, delimiter="," )
+        for jdx, sample in enumerate( test ):
+            sample = sample.reshape( ( 9, 7 ) )[ 1: ].T
+            sample = numpy.matrix( sample ).mean( 0 ).A1
+            designation = euclidian_classification( sample, clusterModel )   # Find the classification of the test point
+            if statuses[ designation ] > 0:
+                prediction = forests[ designation ].predict( numpy.matrix( sample ) )[ 0 ]
+                # prediction = SVMs[ designation ].predict( numpy.matrix( sample ) )[ 0 ]
+                if prediction == 1.0:
+                    hits += 1
+                predictions.append( prediction )
+            else:
+                predictions.append( 0.0 )
+        print( "Testing Model {} Attacks Predicted.".format( hits ) )
+        print( "Testing Model Attack Ratio: {}%.".format( ( decimal.Decimal( hits ) / decimal.Decimal( len( test ) ) ) * decimal.Decimal( 100 ) ) )
+
+        # test = numpy.matrix( test ).mean( 0 ).A1
+        #
+        # designation = euclidian_classification( test, clusterModel )   # Find the classification of the test point
+        # print( "[ TEST {} ] Cluster Designation: {}.".format( idx, ( designation + 1 ) ) )
+        # # print( test )
+        #
+        # if statuses[ designation ] > 0:
+        #     prob =  forests[ designation ].predict_proba( numpy.matrix( test ) )
+        #     clas = forests[ designation ].predict( numpy.matrix( test ) )
+        #     print( "[ TEST {} ] Probability: {} Prediction: {}.\n".format( idx, prob, clas ) )
+        #     print( numpy.matrix( test ) )
+        # else:
+        #     print( " " )
+
 
     print( " " )
 
