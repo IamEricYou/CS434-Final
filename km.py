@@ -200,6 +200,53 @@ def model_error( M, Ye ):
     error = ( ( decimal.Decimal( M.shape[0] ) - decimal.Decimal( misses ) ) / decimal.Decimal( M.shape[0] ) ) * decimal.Decimal( 100 )
     return( error )
 
+def NN(training,testing):
+
+    X = training[:,0:8]
+    Y = training[:,8]
+    real_testing = [ "./data/general_test_instances.csv" ]
+    subj_testing1 = [ "./data/subject2_instances.csv" ]
+    subj_testing2 = [ "./data/subject7_instances.csv" ]
+
+    model = Sequential()
+    model.add(Dense(12, input_dim=8, activation='relu')) # input layer requires input_dim param
+    model.add(Dense(15, activation='relu'))
+    model.add(Dense(8, activation='relu'))
+    model.add(Dense(10, activation='sigmoid'))
+    model.add(Dense(1, activation='sigmoid')) # sigmoid instead of relu for final probability between 0 and 1
+    
+    model.compile(loss="binary_crossentropy", optimizer="SGD", metrics=['accuracy'])
+    history = model.fit(X, Y, epochs = 300, batch_size=10, verbose=1)
+    
+    scores = model.evaluate(X, Y)
+    print("\n%s: %.2f%%" % (model.metrics_names[1], scores[1]*100))
+
+    count = 0
+    for idx, set in enumerate( testing ):
+        test = numpy.loadtxt( set, float, delimiter=",", usecols=range( 1, 9 ) )
+        test = numpy.matrix( test ).mean( 0 ).A1
+        test = numpy.array([test])
+        prediction = model.predict(test)
+        print prediction[0]*100
+        if prediction[0]*100 < 4.0:
+            print(str(count) + " testset result: " + str(0))
+            count = count + 1
+        else:
+            print(str(count) + " testset result: " + str(1))
+            count = count + 1
+            
+    count = 0
+    """
+    for idx, set in enumerate( real_testing ):
+        test = numpy.loadtxt( set, float, delimiter="," )
+        for jdx, sample in enumerate( test ):
+            sample = sample.reshape( ( 9, 7 ) )[ 1: ].T
+            sample = numpy.matrix( sample ).mean( 0 ).A1
+            sample = numpy.array([sample])
+            prediction = model.predict(sample)
+            print prediction[0]*100
+    """
+
 
 ####################################################################
  # Function: main
@@ -337,7 +384,7 @@ def main(argv):
         # else:
         #     print( " " )
 
-
+    #NN(train, testingSets) for NN
     print( " " )
 
 if __name__ == "__main__":
