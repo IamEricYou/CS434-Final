@@ -9,7 +9,13 @@ from matplotlib.dates import strpdate2num
 from collections import OrderedDict
 from sklearn.ensemble import RandomForestClassifier
 from sklearn import svm
+from keras.models import Sequential
+from keras.layers import Dense, Dropout
 
+import os
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' #For AVX2 FMA Error, which is causing from TensorFlow
+numpy.random.seed(777)
 
 def parse_args():
     if len( sys.argv ) < 2:
