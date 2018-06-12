@@ -202,6 +202,9 @@ def model_error( M, Ye ):
     error = ( ( decimal.Decimal( M.shape[0] ) - decimal.Decimal( misses ) ) / decimal.Decimal( M.shape[0] ) ) * decimal.Decimal( 100 )
     return( error )
 
+####################################################################
+ # Function: write_results
+####################################################################
 
 def write_results(filename, predictions):
     file = open( filename, "a" )
@@ -215,24 +218,22 @@ def write_results(filename, predictions):
 
 def main(argv):
 
-    # TODO: Test OneClassSVM by removing all instances of attacks then predicting whether the attack instances are outliers
-    # TODO: If OneClassSVM Adds information combine it with Random Forest to get class probabilities and class
-    # TODO: Save results in specified manner and run testing script
+    # TODO: Run more tests on probability condition. May have an effect on the false positives 
 
-    # trainingSets = [ "./data/subject-1.csv",
-    #                  "./data/subject-2.csv",
-    #                  "./data/subject-3.csv",
-    #                  "./data/subject-4.csv" ]
-    # testingSets = [ "./data/general-instances.csv" ]
-    # resultsFile = "./results/general-pred-1.csv"
+    trainingSets = [ "./data/subject-1.csv",
+                     "./data/subject-2.csv",
+                     "./data/subject-3.csv",
+                     "./data/subject-4.csv" ]
+    testingSets = [ "./data/general-instances.csv" ]
+    resultsFile = "./results/general-pred-1.csv"
 
     # trainingSets = [ "./data/individual-1.csv" ]
     # testingSets = [ "./data/individual-1-instances.csv" ]
     # resultsFile = "./results/individual-1-pred-1.csv"
 
-    trainingSets = [ "./data/individual-2.csv" ]
-    testingSets = [ "./data/individual-2-instances.csv" ]
-    resultsFile = "./results/individual-2-pred-1.csv"
+    # trainingSets = [ "./data/individual-2.csv" ]
+    # testingSets = [ "./data/individual-2-instances.csv" ]
+    # resultsFile = "./results/individual-2-pred-1.csv"
 
     k = parse_args( )
     numpy.set_printoptions( suppress=True )
@@ -257,11 +258,14 @@ def main(argv):
     forests = []
 
     for idx, cluster in enumerate( clusters ):
+        weight = None
+        if statuses[ idx ] > 0:
+            weight = { 0: 1, 1: 10 }
         forests.append( RandomForestClassifier(
             bootstrap=False,
-            class_weight=None,
+            class_weight=weight,
             criterion='gini',
-            max_depth=7,
+            max_depth=10,
             max_features=None,
             max_leaf_nodes=None,
             min_impurity_decrease=0.0,
@@ -269,7 +273,7 @@ def main(argv):
             min_samples_leaf=1,
             min_samples_split=2,
             min_weight_fraction_leaf=0.0,
-            n_estimators=20,
+            n_estimators=128,
             n_jobs=1,
             oob_score=False,
             random_state=0,

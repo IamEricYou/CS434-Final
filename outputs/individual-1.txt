@@ -1,0 +1,147 @@
+weight = None
+if statuses[ idx ] > 0:
+    weight = { 0: 1, 1: 3 }
+forests.append( RandomForestClassifier(
+    bootstrap=False,
+    class_weight=weight,
+    criterion='gini',
+    max_depth=8,
+    max_features=None,
+    max_leaf_nodes=None,
+    min_impurity_decrease=0.0,
+    min_impurity_split=None,
+    min_samples_leaf=1,
+    min_samples_split=2,
+    min_weight_fraction_leaf=0.0,
+    n_estimators=128,
+    n_jobs=1,
+    oob_score=False,
+    random_state=0,
+    verbose=0,
+    warm_start=False )
+)
+
+Vincenzos-MacBook-Pro:Final Project vpiscitello$ python random-forest.py 1
+[ CLUSTER 1 ] Points: 619  -  Attacks: 39  -  Ratio: 6.30048465267
+-8.20051260787e-14, -2.77645434914e-16, -1.56758469067e-16, -2.04646925864e-16, 0.0630048465267,
+
+[ TOTAL ] Points: 619  -  Attacks: 39  -  Ratio: 6.30048465267
+
+False Positives: 18
+False Negatives: 0
+Training Model Accuracy: 97.09%
+
+Testing Model 207 Attacks Predicted.
+Testing Model Attack Ratio: 7.773%.
+
+
+
+
+Vincenzos-MacBook-Pro:Final Project vpiscitello$ python random-forest.py 3
+[ CLUSTER 1 ] Points: 336  -  Attacks: 39  -  Ratio: 11.6071428571
+-46.1118176726, 5.26247132453e-05, -0.0647021454006, -0.0360045832666, 0.116071428571,
+
+[ CLUSTER 2 ] Points: 217  -  Attacks: 0  -  Ratio: 0.0
+30.9809720184, 0.190220284153, 0.127111411513, 0.10065123761, 0.0,
+
+[ CLUSTER 3 ] Points: 66  -  Attacks: 0  -  Ratio: 0.0
+132.889391061, -0.625689144924, -0.0885341733881, -0.147633008846, 0.0,
+
+[ TOTAL ] Points: 619  -  Attacks: 39  -  Ratio: 6.30048465267
+
+False Positives: 23
+False Negatives: 0
+Training Model Accuracy: 96.28%
+
+Testing Model 210 Attacks Predicted.
+Testing Model Attack Ratio: 7.886%.
+
+
+
+
+Vincenzos-MacBook-Pro:Final Project vpiscitello$ python random-forest.py 4
+[ CLUSTER 1 ] Points: 175  -  Attacks: 0  -  Ratio: 0.0
+54.4476130423, -0.273692444256, -0.150600418214, 0.118079175433, 0.0,
+
+[ CLUSTER 2 ] Points: 191  -  Attacks: 4  -  Ratio: 2.0942408377
+-10.820186893, 0.737373042233, 0.163539024519, -0.0356770533584, 0.020942408377,
+
+[ CLUSTER 3 ] Points: 221  -  Attacks: 35  -  Ratio: 15.8371040724
+-59.0318426523, -0.377665239936, -0.0357856940222, -0.00799118564233, 0.158371040724,
+
+[ CLUSTER 4 ] Points: 32  -  Attacks: 0  -  Ratio: 0.0
+174.51127001, -0.296189227992, 0.0946174338476, -0.377608952573, 0.0,
+
+[ TOTAL ] Points: 619  -  Attacks: 39  -  Ratio: 6.30048465267
+
+False Positives: 8
+False Negatives: 0
+Training Model Accuracy: 98.71%
+
+Testing Model 115 Attacks Predicted.
+Testing Model Attack Ratio: 4.318%.
+
+
+
+
+Vincenzos-MacBook-Pro:Final Project vpiscitello$ python random-forest.py 6
+[ CLUSTER 1 ] Points: 126  -  Attacks: 0  -  Ratio: 0.0
+31.8588659817, 0.424769582968, 0.0084798766997, 0.111005310165, 0.0,
+
+[ CLUSTER 2 ] Points: 29  -  Attacks: 0  -  Ratio: 0.0
+180.493579497, -0.646777694209, 0.125671473379, -0.370340893503, 0.0,
+
+[ CLUSTER 3 ] Points: 131  -  Attacks: 26  -  Ratio: 19.8473282443
+-68.3747066881, -1.00796797453, -0.0149199041739, -0.152278172719, 0.198473282443,
+
+[ CLUSTER 4 ] Points: 78  -  Attacks: 0  -  Ratio: 0.0
+80.158992893, -0.526335211037, -0.314279292729, 0.0961100532096, 0.0,
+
+[ CLUSTER 5 ] Points: 129  -  Attacks: 3  -  Ratio: 2.32558139535
+-10.5626797581, 0.581730965692, 0.239754792513, -0.063309821165, 0.0232558139535,
+
+[ CLUSTER 6 ] Points: 126  -  Attacks: 10  -  Ratio: 7.93650793651
+-41.1211119033, 0.502303509751, -0.0728016916399, 0.137873335213, 0.0793650793651,
+
+[ TOTAL ] Points: 619  -  Attacks: 39  -  Ratio: 6.30048465267
+
+False Positives: 0
+False Negatives: 0
+Training Model Accuracy: 100%
+
+Testing Model 111 Attacks Predicted.
+Testing Model Attack Ratio: 4.168%.
+
+
+
+
+Vincenzos-MacBook-Pro:Final Project vpiscitello$ python random-forest.py 7
+[ CLUSTER 1 ] Points: 98  -  Attacks: 20  -  Ratio: 20.4081632653
+-71.7885461763, -1.12470446615, -0.0227318258883, -0.129186165176, 0.204081632653,
+
+[ CLUSTER 2 ] Points: 119  -  Attacks: 3  -  Ratio: 2.52100840336
+-23.605849395, 0.609345884974, -0.21366234245, -0.0797472852195, 0.0252100840336,
+
+[ CLUSTER 3 ] Points: 84  -  Attacks: 1  -  Ratio: 1.19047619048
+3.70080963833, 0.60046575307, 0.641498766381, 0.0327121729544, 0.0119047619048,
+
+[ CLUSTER 4 ] Points: 111  -  Attacks: 15  -  Ratio: 13.5135135135
+-50.2629489106, 0.402198082465, -0.0261715620098, 0.0974953097456, 0.135135135135,
+
+[ CLUSTER 5 ] Points: 28  -  Attacks: 0  -  Ratio: 0.0
+182.176200198, -0.31257284794, 0.0489692343622, -0.375657045689, 0.0,
+
+[ CLUSTER 6 ] Points: 59  -  Attacks: 0  -  Ratio: 0.0
+88.1747536407, -0.684929886033, -0.24457063054, 0.0494187492154, 0.0,
+
+[ CLUSTER 7 ] Points: 120  -  Attacks: 0  -  Ratio: 0.0
+40.0787404364, -0.0684277501856, -0.0855732222045, 0.134858835783, 0.0,
+
+[ TOTAL ] Points: 619  -  Attacks: 39  -  Ratio: 6.30048465267
+
+False Positives: 0
+False Negatives: 0
+Training Model Accuracy: 100%
+
+Testing Model 178 Attacks Predicted.
+Testing Model Attack Ratio: 6.684%.

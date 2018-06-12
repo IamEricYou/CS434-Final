@@ -1,0 +1,115 @@
+weight = None
+if statuses[ idx ] > 0:
+    weight = { 0: 1, 1: 3 }
+forests.append( RandomForestClassifier(
+    bootstrap=False,
+    class_weight=weight,
+    criterion='gini',
+    max_depth=13,
+    max_features=None,
+    max_leaf_nodes=None,
+    min_impurity_decrease=0.0,
+    min_impurity_split=None,
+    min_samples_leaf=1,
+    min_samples_split=2,
+    min_weight_fraction_leaf=0.0,
+    n_estimators=128,
+    n_jobs=1,
+    oob_score=False,
+    random_state=0,
+    verbose=0,
+    warm_start=False )
+)
+
+Vincenzos-MacBook-Pro:Final Project vpiscitello$ python random-forest.py 1
+[ CLUSTER 1 ] Points: 525  -  Attacks: 41  -  Ratio: 7.80952380952
+5.29523514983e-15, -2.19295481245e-16, 9.09114053879e-16, -2.32829628593e-16, 0.0780952380952,
+
+[ TOTAL ] Points: 525  -  Attacks: 41  -  Ratio: 7.80952380952
+
+False Positives: 0
+False Negatives: 0
+Training Model Accuracy: 100%
+
+Testing Model 101 Attacks Predicted.
+Testing Model Attack Ratio: 3.880%.
+
+
+
+Vincenzos-MacBook-Pro:Final Project vpiscitello$ python random-forest.py 3
+[ CLUSTER 1 ] Points: 325  -  Attacks: 39  -  Ratio: 12.0
+-10.3080927878, 0.0121737017024, -0.090015498551, -0.00399542114963, 0.12,
+
+[ CLUSTER 2 ] Points: 188  -  Attacks: 2  -  Ratio: 1.06382978723
+11.7802563243, -0.0317235401436, 0.179747676449, 0.00537914425992, 0.0106382978723,
+
+[ CLUSTER 3 ] Points: 12  -  Attacks: 0  -  Ratio: 0.0
+94.6201639221, 0.167297707808, -0.378127178618, 0.0239360627304, 0.0,
+
+[ TOTAL ] Points: 525  -  Attacks: 41  -  Ratio: 7.80952380952
+
+False Positives: 0
+False Negatives: 0
+Training Model Accuracy: 100%
+
+Testing Model 151 Attacks Predicted.
+Testing Model Attack Ratio: 5.801%.
+
+
+
+
+Vincenzos-MacBook-Pro:Final Project vpiscitello$ python random-forest.py 5
+[ CLUSTER 1 ] Points: 9  -  Attacks: 0  -  Ratio: 0.0
+105.559430623, 0.359527395692, -0.534885017384, -0.172991827819, 0.0,
+
+[ CLUSTER 2 ] Points: 173  -  Attacks: 8  -  Ratio: 4.62427745665
+-5.00730792104, -0.0592962457321, -0.0393080734594, -0.0269621807002, 0.0462427745665,
+
+[ CLUSTER 3 ] Points: 163  -  Attacks: 31  -  Ratio: 19.018404908
+-15.1354615823, 0.0923845067073, -0.116936862095, 0.0138610032309, 0.19018404908,
+
+[ CLUSTER 4 ] Points: 33  -  Attacks: 0  -  Ratio: 0.0
+33.5171919401, 0.171910532515, -0.0389738310039, 0.156103551724, 0.0,
+
+[ CLUSTER 5 ] Points: 147  -  Attacks: 2  -  Ratio: 1.36054421769
+8.68872311987, -0.093259987863, 0.217422495303, -0.00809100014995, 0.0136054421769,
+
+[ TOTAL ] Points: 525  -  Attacks: 41  -  Ratio: 7.80952380952
+
+False Positives: 3
+False Negatives: 0
+Training Model Accuracy: 99.43%
+
+Testing Model 182 Attacks Predicted.
+Testing Model Attack Ratio: 6.992%.
+
+
+
+
+Vincenzos-MacBook-Pro:Final Project vpiscitello$ python random-forest.py 6
+[ CLUSTER 1 ] Points: 172  -  Attacks: 9  -  Ratio: 5.23255813953
+-5.73575215296, -0.0881567376033, -0.0671538252137, -0.0242304156363, 0.0523255813953,
+
+[ CLUSTER 2 ] Points: 43  -  Attacks: 0  -  Ratio: 0.0
+25.6718313905, 0.0418980297781, 0.0671054562735, 0.00678975432195, 0.0,
+
+[ CLUSTER 3 ] Points: 8  -  Attacks: 0  -  Ratio: 0.0
+64.8856576142, -0.362541083539, -0.294604263879, 0.362103217664, 0.0,
+
+[ CLUSTER 4 ] Points: 153  -  Attacks: 30  -  Ratio: 19.6078431373
+-15.4482404296, 0.124963476608, -0.115716203218, 0.0187524157896, 0.196078431373,
+
+[ CLUSTER 5 ] Points: 6  -  Attacks: 0  -  Ratio: 0.0
+118.772176627, 0.387812798996, -0.539204536021, -0.296676471741, 0.0,
+
+[ CLUSTER 6 ] Points: 143  -  Attacks: 2  -  Ratio: 1.3986013986
+7.09456703194, -0.0362560591568, 0.223507438717, -0.000770730580949, 0.013986013986,
+
+[ TOTAL ] Points: 525  -  Attacks: 41  -  Ratio: 7.80952380952
+
+False Positives: 0
+False Negatives: 0
+Training Model Accuracy: 100%
+
+Testing Model 152 Attacks Predicted.
+Testing Model Attack Ratio: 5.839%.
