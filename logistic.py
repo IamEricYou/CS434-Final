@@ -9,6 +9,7 @@ from matplotlib.dates import strpdate2num
 from collections import OrderedDict
 
 from sklearn.ensemble import RandomForestClassifier
+from sklearn import preprocessing, decomposition, linear_model
 from sklearn import svm
 from sklearn.decomposition import PCA
 
@@ -223,15 +224,15 @@ def main(argv):
                      "./data/subject-3.csv",
                      "./data/subject-4.csv" ]
     testingSets = [ "./data/general-instances.csv" ]
-    resultsFile = "./results/general-pred-1.csv"
+    resultsFile = "./results/general-pred-2.csv"
 
     # trainingSets = [ "./data/individual-1.csv" ]
     # testingSets = [ "./data/individual-1-instances.csv" ]
-    # resultsFile = "./results/individual-1-pred-1.csv"
+    # resultsFile = "./results/individual-1-pred-2.csv"
 
     # trainingSets = [ "./data/individual-2.csv" ]
     # testingSets = [ "./data/individual-2-instances.csv" ]
-    # resultsFile = "./results/individual-2-pred-1.csv"
+    # resultsFile = "./results/individual-2-pred-2.csv"
 
     k = parse_args( )
     numpy.set_printoptions( suppress=True )
@@ -253,30 +254,21 @@ def main(argv):
 
     clusters, clusterModel, statuses = KM( numpy.hstack( ( fitted, numpy.matrix( tY ).T ) ), k, store=False )
 
-    forests = []
+    logs = []
 
     for idx, cluster in enumerate( clusters ):
         weight = None
         if statuses[ idx ] > 0:
-            weight = { 0: 1, 1: 10 }
-        forests.append( RandomForestClassifier(
-            bootstrap=False,
-            class_weight=weight,
-            criterion='gini',
-            max_depth=10,
-            max_features=None,
-            max_leaf_nodes=None,
-            min_impurity_decrease=0.0,
-            min_impurity_split=None,
-            min_samples_leaf=1,
-            min_samples_split=2,
-            min_weight_fraction_leaf=0.0,
-            n_estimators=128,
-            n_jobs=1,
-            oob_score=False,
-            random_state=0,
-            verbose=0,
-            warm_start=False )
+            weight = { 0: 1, 1: 3 }
+
+        logs.append(
+            linear_model.LogisticRegression(
+                class_weight=weight,
+                solver='saga',
+                max_iter=1000,
+                multi_class='multinomial',
+                tol=1e-10
+            )
         )
 
         T = numpy.matrix( cluster )
@@ -285,8 +277,9 @@ def main(argv):
         T = numpy.delete( T, T.shape[1] - 1, 1 )    # Delete the last column in T
         X = numpy.matrix( T, float )  # Apply the normilization to the features to get the vector for analysis
 
-        forests[ idx ].fit( X, y=Y )
-        # print( forests[ idx ].feature_importances_ )
+        if statuses[ idx ] > 0:
+            logs[ idx ].fit( X, y=Y )
+            print( "Score: " + str( logs[ idx ].score( X,Y ) ) )
 
 
     predictions = []
@@ -294,8 +287,9 @@ def main(argv):
         testSample = pca.transform( numpy.matrix( sample[ : -1 ] ) )
         designation = euclidian_classification( testSample[ 0 ], clusterModel, False )   # Find the classification of the test point
         if statuses[ designation ] > 0:
-            prob = forests[ designation ].predict_proba( testSample )[ 0 ]
-            if prob[ 1 ] > 0.15:
+            # print( "{}, {}".format( logs[ designation ].predict_proba( testSample ), logs[ designation ].predict( testSample ) ) )
+            prob = logs[ designation ].predict_proba( testSample )[ 0 ]
+            if prob[ 1 ] > 0.45:
                 predictions.append( 1.0 )
             else:
                 predictions.append( 0.0 )
@@ -318,8 +312,8 @@ def main(argv):
             testSample = pca.transform( numpy.matrix( sample ) )
             designation = euclidian_classification( testSample[ 0 ], clusterModel )   # Find the classification of the test point
             if statuses[ designation ] > 0:
-                prob = forests[ designation ].predict_proba( testSample )[ 0 ]
-                if prob[ 1 ] > 0.15:
+                prob = logs[ designation ].predict_proba( testSample )[ 0 ]
+                if prob[ 1 ] > 0.45:
                     hits += 1
                     predictions.append( [ ( prob[ 1 ] * 100.0 ), 1.0 ] )
                 else:
