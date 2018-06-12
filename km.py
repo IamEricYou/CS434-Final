@@ -8,6 +8,7 @@ import numpy
 from matplotlib.dates import strpdate2num
 from collections import OrderedDict
 from sklearn.ensemble import RandomForestClassifier
+from sklearn import preprocessing, decomposition, linear_model
 from sklearn import svm
 from keras.models import Sequential
 from keras.layers import Dense, Dropout
@@ -252,7 +253,25 @@ def NN(training,testing):
             prediction = model.predict(sample)
             print prediction[0]*100
     """
+    
+def lin_log(training, testing):
+    X = training[:,0:8]
+    Y = training[:,8]
+    real_testing = [ "./data/general_test_instances.csv" ]
+    subj_testing1 = [ "./data/subject2_instances.csv" ]
+    subj_testing2 = [ "./data/subject7_instances.csv" ]
 
+    logistic = linear_model.LogisticRegression(solver='saga',max_iter=1000,multi_class='multinomial',tol=1e-10)
+    logistic.fit(X,Y)
+    logistic.intercept_
+    print("Score: " + str(logistic.score(X,Y)))
+
+    for idx, set in enumerate( testing ):
+        test = numpy.loadtxt( set, float, delimiter=",", usecols=range( 1, 9 ) )
+        test = numpy.matrix( test ).mean( 0 ).A1
+        test = numpy.array([test])
+        print(logistic.predict_proba(test))
+        print(logistic.predict(test))
 ####################################################################
  # Function: write_results
 ####################################################################
@@ -399,7 +418,8 @@ def main(argv):
         # else:
         #     print( " " )
 
-    #NN(train, testingSets) for NN
+    #NN(train, testingSets) #for NN
+    lin_log(train, testingSets) #for logistic regression 
     print( " " )
 
 if __name__ == "__main__":
