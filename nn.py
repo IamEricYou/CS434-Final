@@ -4,6 +4,7 @@ from datetime import datetime, date, time, timedelta
 import math
 import decimal
 import numpy
+
 # import matplotlib.pyplot as plot
 from matplotlib.dates import strpdate2num
 from collections import OrderedDict
@@ -12,9 +13,8 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn import preprocessing, decomposition, linear_model
 from sklearn import svm
 from sklearn.decomposition import PCA
-from keras.models import Sequential
-from keras.layers import Dense, Dropout
-
+numpy.random.seed(1337)
+from sklearn.neural_network import MLPClassifier
 def parse_args():
     if len( sys.argv ) < 2:
         return 0
@@ -210,14 +210,51 @@ def model_error( M, Ye ):
 ####################################################################
 
 def write_results(filename, predictions):
-    file = open( filename, "a" )
+    file = open( filename, "w" )
     for pred in predictions:
         file.write( str( pred[ 0 ] ) + ", " + str( pred[ 1 ] ) + "\n" )
+    print("The result is saved in " + str(filename))
     file.close
 
 ####################################################################
  # Function: main
 ####################################################################
+
+def NN(training,testing):
+    X = training[:,0:8]
+    Y = training[:,8]
+    real_testing = [ "./data/general_test_instances.csv" ]
+    subj_testing1 = [ "./data/subject2_instances.csv" ]
+    subj_testing2 = [ "./data/subject7_instances.csv" ]
+    
+    clf = MLPClassifier(activation='relu', alpha=1e-05, batch_size='auto',
+            beta_1=0.9, beta_2=0.999, early_stopping=False,
+            epsilon=1e-07, hidden_layer_sizes=(10,), learning_rate='constant',
+            learning_rate_init=0.01, max_iter=300, momentum=0.9,
+            nesterovs_momentum=True, power_t=0.5, random_state=1, shuffle=True,
+            solver='sgd', tol=0.000001, validation_fraction=0.1, verbose=False,
+            warm_start=False)
+    clf.fit(X, Y)
+
+    temp = []
+    for idx, set in enumerate( real_testing ):
+        test = numpy.loadtxt( set, float, delimiter="," )
+        for jdx, sample in enumerate( test ):
+            sample = sample.reshape( ( 9, 7 ) )[ 1: ].T
+            sample = numpy.matrix( sample ).mean( 0 ).A1
+            sample = numpy.array([sample])
+            prediction = clf.predict_proba(sample)
+            custom_pred = float(round(prediction[0][1]*100))
+            if custom_pred > 5.0 :
+                custom_pred = 1
+            else:
+                custom_pred = 0
+            prediction = [float(round(prediction[0][1]*100,6)),int(custom_pred)]
+            #print prediction
+            temp.append(prediction)
+    
+    temp = numpy.array(temp).tolist()
+    return temp
 
 def main(argv):
 
@@ -228,7 +265,7 @@ def main(argv):
                      "./data/subject-3.csv",
                      "./data/subject-4.csv" ]
     # testingSets = [ "./data/general-instances.csv" ]
-    # resultsFile = "./results/general-pred-1.csv"
+    resultsFile = "./results/general-pred3.csv"
 
     testingSets = [ "./sampleinstances/sampleinstance_1.csv",
                     "./sampleinstances/sampleinstance_2.csv",
@@ -244,112 +281,19 @@ def main(argv):
     # testingSets = [ "./data/individual-2-instances.csv" ]
     # resultsFile = "./results/individual-2-pred-1.csv"
 
-    k = parse_args( )
-    numpy.set_printoptions( suppress=True )
+    #k = parse_args( )
+    #numpy.set_printoptions( suppress=True )
 
     train = numpy.empty( ( 0, 9 ) )
     for set in trainingSets:
         data = init_matrices( set )
         data = condense_blocks( data )
         train = numpy.vstack( ( train, data ) )
-
-    tT = numpy.matrix( train )
-    tY = numpy.matrix( tT.T[ tT.shape[1] - 1 ] ).T   # Create the Y matrix by pulling the last column from T
-    tY = numpy.ravel( tY )
-    tT = numpy.delete( tT, tT.shape[1] - 1, 1 )    # Delete the last column in T
-    tX = numpy.matrix( tT, float )  # Apply the normilization to the features to get the vector for analysis
-
-    pca = PCA( n_components=4 )
-    fitted = pca.fit_transform( tX )
-
-    clusters, clusterModel, statuses = KM( numpy.hstack( ( fitted, numpy.matrix( tY ).T ) ), k, store=False )
-
-    nets = []
-
-    for idx, cluster in enumerate( clusters ):
-
-        nets.append(
-            Sequential()
-        )
-
-        nets[ idx ].add(Dense(12, input_dim=8, activation='relu'))
-        nets[ idx ].add(Dense(15, activation='relu'))
-        nets[ idx ].add(Dense(8, activation='relu'))
-        nets[ idx ].add(Dense(10, activation='sigmoid'))
-        nets[ idx ].add(Dense(1, activation='sigmoid')) # for getting the final probability btw 0 and 1
-
-        sgd = optimizers.SGD(lr=0.01, momentum=0.85, decay=0.0, nesterov=False)
-        nets[ idx ].compile(loss="binary_crossentropy", optimizer=sgd,metrics=['accuracy'])
-
-        T = numpy.matrix( cluster )
-        Y = numpy.matrix( T.T[ T.shape[1] - 1 ] ).T   # Create the Y matrix by pulling the last column from T
-        Y = numpy.ravel( Y )
-        T = numpy.delete( T, T.shape[1] - 1, 1 )    # Delete the last column in T
-        X = numpy.matrix( T, float )  # Apply the normilization to the features to get the vector for analysis
-
-        if statuses[ idx ] > 0:
-            history = nets[ idx ].fit(X, Y, epochs = 100, batch_size=30, verbose=1)
-            scores = nets[ idx ].evaluate(X, Y)
-            print("\n%s: %.2f%%" % (nets[ idx ].metrics_names[1], scores[1]*100))
-
-
-    predictions = []
-    for idx, sample in enumerate( train ):
-        testSample = pca.transform( numpy.matrix( sample[ : -1 ] ) )
-        designation = euclidian_classification( testSample[ 0 ], clusterModel, False )   # Find the classification of the test point
-        if statuses[ designation ] > 0:
-            # print( "{}, {}".format( nets[ designation ].predict_proba( testSample ), nets[ designation ].predict( testSample ) ) )
-            prob = nets[ designation ].predict( testSample )[ 0 ]
-            if prob[ 1 ] > 0.5:
-                predictions.append( 1.0 )
-            else:
-                predictions.append( 0.0 )
-        else:
-            predictions.append( 0.0 )
-
-    print( "Training Model Accuracy: {}%".format( model_error( train, predictions ) ) )
-
-    print( " " )
-
-    for idx, set in enumerate( testingSets ):
-        hits = 0
-        predictions = []
-        # test = numpy.loadtxt( set, float, delimiter="," )
-        test = numpy.loadtxt( set, float, delimiter=",", usecols=range( 1, 9 ) )
-
-        # for jdx, sample in enumerate( test ):
-        #     sample = sample.reshape( ( 9, 7 ) )[ 1: ].T
-        #     sample = numpy.matrix( sample ).mean( 0 ).A1
-        #     testSample = pca.transform( numpy.matrix( sample ) )
-        #     designation = euclidian_classification( testSample[ 0 ], clusterModel )   # Find the classification of the test point
-        #     if statuses[ designation ] > 0:
-        #         print( "{}, {}".format( nets[ designation ].predict_proba( testSample ), nets[ designation ].predict( testSample ) ) )
-        #         prob = nets[ designation ].predict_proba( testSample )[ 0 ]
-        #         if prob[ 1 ] > 0.5:
-        #             predictions.append( 1.0 )
-        #         else:
-        #             predictions.append( 0.0 )
-        #     else:
-        #         predictions.append( [ 0.0 , 0.0 ] )
-        # print( "Testing Model {} Attacks Predicted.".format( hits ) )
-        # print( "Testing Model Attack Ratio: {}%.".format( ( decimal.Decimal( hits ) / decimal.Decimal( len( test ) ) ) * decimal.Decimal( 100 ) ) )
-
-        test = numpy.matrix( test ).mean( 0 ).A1
-        testSample = pca.transform( numpy.matrix( test ) )
-
-        designation = euclidian_classification( testSample, clusterModel )   # Find the classification of the test point
-        print( "[ TEST {} ] Cluster Designation: {}.".format( idx, ( designation + 1 ) ) )
-
-        if statuses[ designation ] > 0:
-            prob = nets[ designation ].predict( testSample )[ 0 ]
-            print( "[ TEST {} ] Probability: {}.\n".format( idx, prob ) )
-        else:
-            print( " " )
-
         # write_results( resultsFile, predictions )
 
+    predictions = NN(train,testingSets)
+    write_results( resultsFile, predictions )
 
-    print( " " )
 
 if __name__ == "__main__":
     main( sys.argv )
