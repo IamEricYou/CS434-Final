@@ -220,21 +220,23 @@ def write_results(filename, predictions):
  # Function: main
 ####################################################################
 
-def NN(training,testing):
+def NN(training):
     X = training[:,0:8]
     Y = training[:,8]
-    real_testing = [ "./data/general_test_instances.csv" ]
-    subj_testing1 = [ "./data/subject2_instances.csv" ]
-    subj_testing2 = [ "./data/subject7_instances.csv" ]
+
+    #real_testing = [ "./data/general_test_instances.csv" ] #for general testing
+    #real_testing = [ "./data/individual-2-instances.csv" ] #for individual testing 2
+    real_testing = [ "./data/individual-1-instances.csv" ] #for individual testing 1
     
-    clf = MLPClassifier(activation='relu', alpha=1e-05, batch_size='auto',
+    clf = MLPClassifier(activation='relu', alpha=1e-10, batch_size='auto',
             beta_1=0.9, beta_2=0.999, early_stopping=False,
-            epsilon=1e-07, hidden_layer_sizes=(10,), learning_rate='constant',
-            learning_rate_init=0.01, max_iter=300, momentum=0.9,
-            nesterovs_momentum=True, power_t=0.5, random_state=1, shuffle=True,
-            solver='sgd', tol=0.000001, validation_fraction=0.1, verbose=False,
+            epsilon=1e-10, hidden_layer_sizes=(10,), learning_rate='constant',
+            learning_rate_init=0.008, max_iter=1000, momentum=0.9,
+            nesterovs_momentum=True, power_t=0.5, random_state=None, shuffle=False,
+            solver='adam', tol=1E-10, validation_fraction=0.1, verbose=True,
             warm_start=False)
     clf.fit(X, Y)
+    #print(clf.score(X,Y))
 
     temp = []
     for idx, set in enumerate( real_testing ):
@@ -243,7 +245,9 @@ def NN(training,testing):
             sample = sample.reshape( ( 9, 7 ) )[ 1: ].T
             sample = numpy.matrix( sample ).mean( 0 ).A1
             sample = numpy.array([sample])
+            #print sample
             prediction = clf.predict_proba(sample)
+            #print str(sample) + " predic: " + str(clf.predict_proba(sample))
             custom_pred = float(round(prediction[0][1]*100))
             if custom_pred > 5.0 :
                 custom_pred = 1
@@ -252,7 +256,6 @@ def NN(training,testing):
             prediction = [float(round(prediction[0][1]*100,6)),int(custom_pred)]
             #print prediction
             temp.append(prediction)
-    
     temp = numpy.array(temp).tolist()
     return temp
 
@@ -260,22 +263,18 @@ def main(argv):
 
     # TODO: Run more tests on probability condition. May have an effect on the false positives
 
-    trainingSets = [ "./data/subject-1.csv",
-                     "./data/subject-2.csv",
-                     "./data/subject-3.csv",
-                     "./data/subject-4.csv" ]
-    # testingSets = [ "./data/general-instances.csv" ]
-    resultsFile = "./results/general-pred3.csv"
+    
+    # trainingSets = [ "./data/subject-1.csv",
+    #                  "./data/subject-2.csv",
+    #                  "./data/subject-3.csv",
+    #                  "./data/subject-4.csv" ] #for general
 
-    testingSets = [ "./sampleinstances/sampleinstance_1.csv",
-                    "./sampleinstances/sampleinstance_2.csv",
-                    "./sampleinstances/sampleinstance_3.csv",
-                    "./sampleinstances/sampleinstance_4.csv",
-                    "./sampleinstances/sampleinstance_5.csv" ]
+    trainingSets = [ "./data/individual-1.csv" ]
+    #trainingSets = [ "./data/individual-2.csv" ]
 
-    # trainingSets = [ "./data/individual-1.csv" ]
-    # testingSets = [ "./data/individual-1-instances.csv" ]
-    # resultsFile = "./results/individual-1-pred-1000.csv"
+    resultsFile = "./results/individual1-pred3.csv"
+    #resultsFile = "./results/general-pred3.csv"
+    #resultsFile = "./results/individual2-pred3.csv"
 
     # trainingSets = [ "./data/individual-2.csv" ]
     # testingSets = [ "./data/individual-2-instances.csv" ]
@@ -291,9 +290,8 @@ def main(argv):
         train = numpy.vstack( ( train, data ) )
         # write_results( resultsFile, predictions )
 
-    predictions = NN(train,testingSets)
+    predictions = NN(train)
     write_results( resultsFile, predictions )
-
 
 if __name__ == "__main__":
     main( sys.argv )
